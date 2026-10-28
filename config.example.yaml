@@ -1,0 +1,10 @@
+server:
+  port: 8080
+tfl:
+  base_url: "https://api.tfl.gov.uk"
+  monitored_lines:
+    - victoria
+    - northern
+    - jubilee
+  monitored_stations:
+    - "940GZZLUOXC" # Oxford Circus
