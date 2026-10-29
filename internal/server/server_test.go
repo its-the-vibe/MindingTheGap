@@ -26,6 +26,7 @@ func (f *fake) Arrivals(_ context.Context, line, stationID string) ([]tfl.Arriva
 
 func TestHandlers(t *testing.T) {
 	cfg := &config.Config{}
+	cfg.Dashboard.RefreshIntervalSeconds = 30
 	cfg.TFL.MonitoredStations = []string{"victoria/X"}
 	h := New(cfg, &fake{}).Handler()
 
@@ -43,6 +44,17 @@ func TestHandlers(t *testing.T) {
 	h.ServeHTTP(rec, httptest.NewRequest("GET", "/nope", nil))
 	if rec.Code != http.StatusNotFound {
 		t.Fatalf("expected 404, got %d", rec.Code)
+	}
+}
+
+func TestIndexUsesConfiguredRefreshInterval(t *testing.T) {
+	cfg := &config.Config{}
+	cfg.Dashboard.RefreshIntervalSeconds = 45
+	rec := httptest.NewRecorder()
+	New(cfg, &fake{}).Handler().ServeHTTP(rec, httptest.NewRequest("GET", "/", nil))
+
+	if !strings.Contains(rec.Body.String(), "setInterval(load,45000)") {
+		t.Fatalf("index does not contain configured refresh interval: %s", rec.Body)
 	}
 }
 

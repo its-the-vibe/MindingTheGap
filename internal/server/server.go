@@ -77,7 +77,8 @@ func (s *Server) status(w http.ResponseWriter, r *http.Request) {
 
 func (s *Server) index(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	w.Write([]byte(indexHTML))
+	html := strings.Replace(indexHTML, "__REFRESH_INTERVAL_MS__", fmt.Sprint(s.cfg.Dashboard.RefreshIntervalSeconds*1000), 1)
+	w.Write([]byte(html))
 }
 
 // Run serves until ctx is cancelled, then shuts down gracefully.
@@ -140,5 +141,5 @@ async function load(){
     document.getElementById('err').textContent=(d.errors||[]).join('; ');
   }catch(e){document.getElementById('err').textContent='Failed to load data'}
 }
-load();setInterval(load,30000);
+load();setInterval(load,__REFRESH_INTERVAL_MS__);
 </script></body></html>`
