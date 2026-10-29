@@ -1,5 +1,7 @@
 server:
   port: 8080
+dashboard:
+  refresh_interval_seconds: 30
 tfl:
   base_url: "https://api.tfl.gov.uk"
   monitored_lines:

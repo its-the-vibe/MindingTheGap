@@ -18,7 +18,9 @@ make run
 ```
 Open http://localhost:8080. JSON is served at `/api/v1/status`.
 
-Environment overrides: `PORT`, `TFL_BASE_URL`, `TFL_APP_KEY`.
+Environment overrides: `PORT`, `TFL_BASE_URL`, `TFL_APP_KEY`, and
+`DASHBOARD_REFRESH_INTERVAL_SECONDS`. Set `dashboard.refresh_interval_seconds`
+in the config file to change how often the dashboard refreshes (default: 30 seconds).
 
 ## Monitoring arrivals
 Configure each monitored station as `<line>/<stationId>` under `tfl.monitored_stations`.
