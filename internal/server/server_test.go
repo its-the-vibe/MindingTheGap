@@ -115,6 +115,35 @@ func TestStatusOrdersLinesByConfiguration(t *testing.T) {
 	}
 }
 
+func TestLineStatusReturnsOnlyOrderedLineStatuses(t *testing.T) {
+	cfg := &config.Config{}
+	cfg.TFL.MonitoredLines = []string{"northern", "victoria"}
+	cfg.TFL.MonitoredStations = []string{"northern/940GZZLUOXC"}
+	src := &fake{lineStatuses: []tfl.LineStatus{
+		{ID: "victoria", Name: "Victoria"},
+		{ID: "northern", Name: "Northern"},
+	}}
+	rec := httptest.NewRecorder()
+	New(cfg, src).Handler().ServeHTTP(rec, httptest.NewRequest("GET", "/api/v1/lineStatus", nil))
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("status: %d %s", rec.Code, rec.Body)
+	}
+	if got := rec.Header().Get("Content-Type"); got != "application/json" {
+		t.Fatalf("content type: %q", got)
+	}
+	var got []tfl.LineStatus
+	if err := json.Unmarshal(rec.Body.Bytes(), &got); err != nil {
+		t.Fatal(err)
+	}
+	if len(got) != 2 || got[0].ID != "northern" || got[1].ID != "victoria" {
+		t.Fatalf("line statuses: %+v", got)
+	}
+	if strings.Contains(rec.Body.String(), "arrivals") || len(src.arrivalCalls) != 0 {
+		t.Fatalf("response included arrival data or queried arrivals: %s (%v)", rec.Body, src.arrivalCalls)
+	}
+}
+
 func TestStatusGroupsArrivalsByDirectionAndKeepsFlatArrivals(t *testing.T) {
 	cfg := &config.Config{}
 	cfg.TFL.MonitoredStations = []string{"northern/940GZZLUOXC"}

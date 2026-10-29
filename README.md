@@ -16,7 +16,8 @@ make test
 make build             # outputs bin/server
 make run
 ```
-Open http://localhost:8080. JSON is served at `/api/v1/status`.
+Open http://localhost:8080. JSON is served at `/api/v1/status`; line statuses
+without arrival data are served at `/api/v1/lineStatus`.
 
 Environment overrides: `PORT`, `TFL_BASE_URL`, `TFL_APP_KEY`, and
 `DASHBOARD_REFRESH_INTERVAL_SECONDS`. Set `dashboard.refresh_interval_seconds`
