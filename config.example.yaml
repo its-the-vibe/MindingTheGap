@@ -6,5 +6,8 @@ tfl:
     - victoria
     - northern
     - jubilee
+    - district
   monitored_stations:
-    - "940GZZLUOXC" # Oxford Circus
+    - district/940GZZLUWSM # Westminster
+    - northern/940GZZLUOXC # Oxford Circus
+    - victoria/940GZZLUOXC # Oxford Circus

@@ -26,7 +26,21 @@ func TestArrivalsError(t *testing.T) {
 		w.WriteHeader(500)
 	}))
 	defer srv.Close()
-	if _, err := NewClient(srv.URL, "").Arrivals(context.Background(), "x"); err == nil {
+	if _, err := NewClient(srv.URL, "").Arrivals(context.Background(), "victoria", "x"); err == nil {
 		t.Fatal("expected error")
+	}
+}
+
+func TestArrivalsByLine(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/line/victoria/arrivals/940GZZLUOXC" {
+			t.Errorf("unexpected path %s", r.URL.Path)
+		}
+		w.Write([]byte(`[{"lineName":"Victoria","timeToStation":60}]`))
+	}))
+	defer srv.Close()
+	got, err := NewClient(srv.URL, "").Arrivals(context.Background(), "victoria", "940GZZLUOXC")
+	if err != nil || len(got) != 1 || got[0].LineName != "Victoria" {
+		t.Fatalf("got %+v err %v", got, err)
 	}
 }

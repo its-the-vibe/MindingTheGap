@@ -9,6 +9,7 @@ import (
 	"log"
 	"net/http"
 	"sort"
+	"strings"
 	"time"
 
 	"github.com/its-the-vibe/MindingTheGap/internal/config"
@@ -18,7 +19,7 @@ import (
 // Source abstracts the TfL client for testing.
 type Source interface {
 	LineStatuses(ctx context.Context, ids []string) ([]tfl.LineStatus, error)
-	Arrivals(ctx context.Context, stationID string) ([]tfl.Arrival, error)
+	Arrivals(ctx context.Context, line, stationID string) ([]tfl.Arrival, error)
 }
 
 type Server struct {
@@ -52,15 +53,20 @@ func (s *Server) status(w http.ResponseWriter, r *http.Request) {
 		log.Printf("line status: %v", err)
 	}
 	resp.Lines = lines
-	for _, id := range s.cfg.TFL.MonitoredStations {
-		arr, err := s.src.Arrivals(ctx, id)
+	for _, entry := range s.cfg.TFL.MonitoredStations {
+		line, stationID, ok := strings.Cut(entry, "/")
+		if !ok || line == "" || stationID == "" {
+			resp.Errors = append(resp.Errors, "invalid monitored station entry "+entry)
+			continue
+		}
+		arr, err := s.src.Arrivals(ctx, line, stationID)
 		if err != nil {
-			resp.Errors = append(resp.Errors, "arrivals unavailable for "+id)
-			log.Printf("arrivals %s: %v", id, err)
+			resp.Errors = append(resp.Errors, "arrivals unavailable for "+entry)
+			log.Printf("arrivals %s: %v", entry, err)
 			continue
 		}
 		sort.Slice(arr, func(i, j int) bool { return arr[i].TimeToStation < arr[j].TimeToStation })
-		resp.Arrivals[id] = arr
+		resp.Arrivals[entry] = arr
 	}
 	w.Header().Set("Content-Type", "application/json")
 	if len(resp.Errors) > 0 && len(resp.Lines) == 0 && len(resp.Arrivals) == 0 {

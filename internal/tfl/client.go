@@ -79,9 +79,9 @@ func (c *Client) LineStatuses(ctx context.Context, ids []string) ([]LineStatus, 
 	return out, err
 }
 
-// Arrivals calls GET /stop-point/{id}/arrivals.
-func (c *Client) Arrivals(ctx context.Context, stationID string) ([]Arrival, error) {
+// Arrivals calls GET /line/{line}/arrivals/{stationID}.
+func (c *Client) Arrivals(ctx context.Context, line, stationID string) ([]Arrival, error) {
 	var out []Arrival
-	err := c.get(ctx, "/stop-point/"+url.PathEscape(stationID)+"/arrivals", &out)
+	err := c.get(ctx, "/line/"+url.PathEscape(line)+"/arrivals/"+url.PathEscape(stationID), &out)
 	return out, err
 }

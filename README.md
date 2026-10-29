@@ -20,6 +20,18 @@ Open http://localhost:8080. JSON is served at `/api/v1/status`.
 
 Environment overrides: `PORT`, `TFL_BASE_URL`, `TFL_APP_KEY`.
 
+## Monitoring arrivals
+Configure each monitored station as `<line>/<stationId>` under `tfl.monitored_stations`.
+Each entry triggers a separate TfL request to `/line/{line}/arrivals/{stationId}`.
+List a station more than once to monitor it on multiple lines; each result is keyed by its line/station pair.
+
+```yaml
+tfl:
+  monitored_stations:
+    - northern/940GZZLUOXC
+    - victoria/940GZZLUOXC
+```
+
 ## Docker Compose
 ```sh
 cp config.example.yaml config.yaml
