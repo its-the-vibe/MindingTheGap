@@ -73,10 +73,7 @@ func (s *Server) status(w http.ResponseWriter, r *http.Request) {
 		resp.Arrivals[entry] = arr
 		directions := map[string][]tfl.Arrival{}
 		for _, arrival := range arr {
-			direction := strings.TrimSpace(arrival.TowardsText)
-			if direction == "" {
-				direction = strings.TrimSpace(arrival.DestinationName)
-			}
+			direction := strings.TrimSpace(arrival.Direction)
 			if direction == "" {
 				direction = "Unknown direction"
 			}
@@ -129,6 +126,7 @@ h1{font-size:1.4rem}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:.75rem}
 .card{background:#fff;border-radius:6px;padding:.75rem;box-shadow:0 1px 3px #0003}
 .good{border-left:6px solid #0a0}.bad{border-left:6px solid #d00}
+h3{text-transform:capitalize}
 table{width:100%;border-collapse:collapse}td{padding:.2rem .4rem;border-bottom:1px solid #eee}
 </style></head><body>
 <h1>London Tube Dashboard</h1>

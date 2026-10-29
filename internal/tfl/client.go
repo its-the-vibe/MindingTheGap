@@ -41,6 +41,7 @@ type Arrival struct {
 	PlatformName    string    `json:"platformName"`
 	DestinationName string    `json:"destinationName"`
 	TowardsText     string    `json:"towards"`
+	Direction       string    `json:"direction"`
 	TimeToStation   int       `json:"timeToStation"`
 	ExpectedArrival time.Time `json:"expectedArrival"`
 }

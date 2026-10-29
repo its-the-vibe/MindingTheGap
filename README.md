@@ -28,8 +28,9 @@ Each entry triggers a separate TfL request to `/line/{line}/arrivals/{stationId}
 List a station more than once to monitor it on multiple lines; each result is keyed by its line/station pair.
 The `/api/v1/status` response keeps `arrivals` as a time-sorted array for compatibility and also
 provides `arrivalsByDirection`, keyed by the same line/station pair and then by each arrival's
-`towards` value (or `destinationName` when `towards` is empty). Arrivals in each direction remain
-sorted by time to arrival; arrivals without either direction field are grouped under `Unknown direction`.
+TfL `direction` value (e.g. `northbound`, `southbound`, `clockwise`). Arrivals in each direction remain
+sorted by time to arrival; arrivals without a `direction` are grouped under `Unknown direction`.
+The dashboard shows each direction as a heading (e.g. "Northbound").
 
 ```yaml
 tfl:
