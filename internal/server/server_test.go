@@ -83,6 +83,10 @@ func TestStatusQueriesEachMonitoredLineAndStation(t *testing.T) {
 		got.Arrivals["victoria/940GZZLUOXC"][0].LineName != "victoria" {
 		t.Fatalf("arrivals: %+v", got.Arrivals)
 	}
+	if len(got.ArrivalsByDirection["northern/940GZZLUOXC"]) != 1 ||
+		len(got.ArrivalsByDirection["northern/940GZZLUOXC"]["Unknown direction"]) != 1 {
+		t.Fatalf("single-direction arrivals: %+v", got.ArrivalsByDirection["northern/940GZZLUOXC"])
+	}
 }
 
 func TestStatusGroupsArrivalsByDirectionAndKeepsFlatArrivals(t *testing.T) {
