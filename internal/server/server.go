@@ -181,9 +181,9 @@ async function load(){
       const c=el('div','card');
       c.append(el('strong',null,(arr[0]&&arr[0].stationName)||id));
       Object.entries((d.arrivalsByDirection||{})[id]||{}).forEach(([direction,group])=>{
-        c.append(el('h3',null,direction));const t=el('table');
+        const lineName=(group[0]&&group[0].lineName)||id.split('/')[0];
+        c.append(el('h3',null,lineName+' - '+direction));const t=el('table');
         group.slice(0,10).forEach(a=>{const r=t.insertRow();
-          r.insertCell().textContent=a.lineName;
           r.insertCell().textContent=a.towards||'';
           r.insertCell().textContent=Math.round(a.timeToStation/60)+' min'});
         c.append(t)});
