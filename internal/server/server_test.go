@@ -93,11 +93,11 @@ func TestStatusGroupsArrivalsByDirectionAndKeepsFlatArrivals(t *testing.T) {
 	cfg := &config.Config{}
 	cfg.TFL.MonitoredStations = []string{"northern/940GZZLUOXC"}
 	src := &fake{arrivals: []tfl.Arrival{
-		{LineName: "northern", TowardsText: "Morden", TimeToStation: 420},
-		{LineName: "northern", TowardsText: "Battersea Power", TimeToStation: 180},
-		{LineName: "northern", DestinationName: "Vauxhall", TimeToStation: 60},
-		{LineName: "northern", TowardsText: " ", DestinationName: "Morden", TimeToStation: 120},
-		{LineName: "northern", TimeToStation: 30},
+		{LineName: "northern", Direction: "southbound", TowardsText: "Morden", TimeToStation: 420},
+		{LineName: "northern", Direction: "southbound", TowardsText: "Battersea Power", TimeToStation: 180},
+		{LineName: "northern", Direction: "northbound", TowardsText: "Edgware", TimeToStation: 60},
+		{LineName: "northern", Direction: " northbound ", TowardsText: "High Barnet", TimeToStation: 120},
+		{LineName: "northern", TowardsText: "Morden", TimeToStation: 30},
 	}}
 	rec := httptest.NewRecorder()
 	New(cfg, src).Handler().ServeHTTP(rec, httptest.NewRequest("GET", "/api/v1/status", nil))
@@ -114,17 +114,14 @@ func TestStatusGroupsArrivalsByDirectionAndKeepsFlatArrivals(t *testing.T) {
 		t.Fatalf("flat arrivals: %+v", got.Arrivals[station])
 	}
 	groups := got.ArrivalsByDirection[station]
-	if len(groups) != 4 {
+	if len(groups) != 3 {
 		t.Fatalf("direction groups: %+v", groups)
 	}
-	if got := groups["Morden"]; len(got) != 2 || got[0].TimeToStation != 120 || got[1].TimeToStation != 420 {
-		t.Fatalf("Morden arrivals: %+v", got)
+	if got := groups["southbound"]; len(got) != 2 || got[0].TimeToStation != 180 || got[1].TimeToStation != 420 {
+		t.Fatalf("southbound arrivals: %+v", got)
 	}
-	if got := groups["Battersea Power"]; len(got) != 1 || got[0].TimeToStation != 180 {
-		t.Fatalf("Battersea Power arrivals: %+v", got)
-	}
-	if got := groups["Vauxhall"]; len(got) != 1 || got[0].TimeToStation != 60 {
-		t.Fatalf("Vauxhall arrivals: %+v", got)
+	if got := groups["northbound"]; len(got) != 2 || got[0].TimeToStation != 60 || got[1].TimeToStation != 120 {
+		t.Fatalf("northbound arrivals: %+v", got)
 	}
 	if got := groups["Unknown direction"]; len(got) != 1 || got[0].TimeToStation != 30 {
 		t.Fatalf("unknown direction arrivals: %+v", got)
