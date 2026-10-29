@@ -169,6 +169,21 @@ func TestIndexRendersDirectionGroups(t *testing.T) {
 	}
 }
 
+func TestIndexUsesConsistentArrivalColumnWidths(t *testing.T) {
+	cfg := &config.Config{}
+	rec := httptest.NewRecorder()
+	New(cfg, &fake{}).Handler().ServeHTTP(rec, httptest.NewRequest("GET", "/", nil))
+
+	for _, want := range []string{
+		"table{width:100%;table-layout:fixed;border-collapse:collapse}",
+		"td:last-child{width:5em;text-align:right}",
+	} {
+		if !strings.Contains(rec.Body.String(), want) {
+			t.Errorf("index does not contain %q", want)
+		}
+	}
+}
+
 func TestIndexRendersMinorDelayColorAndReasonToggle(t *testing.T) {
 	cfg := &config.Config{}
 	rec := httptest.NewRecorder()
