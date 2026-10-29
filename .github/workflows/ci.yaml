@@ -2,17 +2,15 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [ main ]
   pull_request:
-    branches: [main]
+    branches: [ main ]
+    types: [opened, synchronize, reopened, labeled]
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-go@v5
-        with:
-          go-version: "1.27"
-      - run: go test -v ./...
-      - run: docker build -t minding-the-gap .
+  call-common-ci:
+    uses: its-the-vibe/.github/.github/workflows/common-ci.yaml@main
+    permissions:
+      contents: read
+      packages: write
+    secrets: inherit

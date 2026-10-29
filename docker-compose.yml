@@ -2,9 +2,7 @@ services:
   app:
     build: .
     ports:
-      - "8080:8080"
-    env_file:
-      - .env
+      - "${PORT:-8080}:8080"
     volumes:
       - ./config.yaml:/config.yaml:ro
     read_only: true
@@ -14,3 +12,6 @@ services:
       - ALL
     security_opt:
       - no-new-privileges:true
+    environment:
+      - TFL_APP_KEY=${TFL_APP_KEY}
+    restart: on-failure:10
