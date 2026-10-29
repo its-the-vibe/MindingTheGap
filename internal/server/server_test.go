@@ -176,7 +176,11 @@ func TestIndexRendersMinorDelayColorAndReasonToggle(t *testing.T) {
 	for _, want := range []string{
 		".minor{border-left:6px solid #f0ad00}",
 		"x.statusSeverityDescription==='Minor Delays'",
+		".line-status{display:block;width:100%",
+		".line-reason{white-space:pre-line}",
 		"statuses.map(x=>x.reason).filter(Boolean)",
+		"status.append(el('strong',null,l.name),document.createElement('br'),document.createTextNode(s))",
+		"el('div','line-reason',reasons)",
 		"status.addEventListener('click'",
 		"reason.hidden=!reason.hidden",
 	} {
