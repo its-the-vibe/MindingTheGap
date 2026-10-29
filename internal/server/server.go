@@ -35,6 +35,7 @@ type StatusResponse struct {
 	Lines               []tfl.LineStatus                    `json:"lines"`
 	Arrivals            map[string][]tfl.Arrival            `json:"arrivals"`
 	ArrivalsByDirection map[string]map[string][]tfl.Arrival `json:"arrivalsByDirection"`
+	StationOrder        []string                            `json:"stationOrder"`
 	Errors              []string                            `json:"errors,omitempty"`
 }
 
@@ -49,6 +50,7 @@ func (s *Server) status(w http.ResponseWriter, r *http.Request) {
 	resp := StatusResponse{
 		Arrivals:            map[string][]tfl.Arrival{},
 		ArrivalsByDirection: map[string]map[string][]tfl.Arrival{},
+		StationOrder:        append([]string{}, s.cfg.TFL.MonitoredStations...),
 	}
 	ctx := r.Context()
 	lines, err := s.src.LineStatuses(ctx, s.cfg.TFL.MonitoredLines)
@@ -56,7 +58,7 @@ func (s *Server) status(w http.ResponseWriter, r *http.Request) {
 		resp.Errors = append(resp.Errors, "line status unavailable")
 		log.Printf("line status: %v", err)
 	}
-	resp.Lines = lines
+	resp.Lines = orderLineStatuses(lines, s.cfg.TFL.MonitoredLines)
 	for _, entry := range s.cfg.TFL.MonitoredStations {
 		line, stationID, ok := strings.Cut(entry, "/")
 		if !ok || line == "" || stationID == "" {
@@ -86,6 +88,24 @@ func (s *Server) status(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadGateway)
 	}
 	json.NewEncoder(w).Encode(resp)
+}
+
+func orderLineStatuses(lines []tfl.LineStatus, configured []string) []tfl.LineStatus {
+	order := make(map[string]int, len(configured))
+	for i, id := range configured {
+		if _, exists := order[id]; !exists {
+			order[id] = i
+		}
+	}
+	sort.SliceStable(lines, func(i, j int) bool {
+		iOrder, iConfigured := order[lines[i].ID]
+		jOrder, jConfigured := order[lines[j].ID]
+		if iConfigured != jConfigured {
+			return iConfigured
+		}
+		return iConfigured && iOrder < jOrder
+	})
+	return lines
 }
 
 func (s *Server) index(w http.ResponseWriter, r *http.Request) {
@@ -154,7 +174,8 @@ async function load(){
       }else c.append(el('strong',null,l.name),status);
       L.append(c)});
     const A=document.getElementById('arrivals');A.replaceChildren();
-    Object.entries(d.arrivals||{}).forEach(([id,arr])=>{
+    (d.stationOrder||Object.keys(d.arrivals||{})).forEach(id=>{
+      const arr=(d.arrivals||{})[id];if(!arr)return;
       const c=el('div','card');
       c.append(el('strong',null,(arr[0]&&arr[0].stationName)||id));
       Object.entries((d.arrivalsByDirection||{})[id]||{}).forEach(([direction,group])=>{
