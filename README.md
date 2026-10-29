@@ -30,7 +30,7 @@ The `/api/v1/status` response keeps `arrivals` as a time-sorted array for compat
 provides `arrivalsByDirection`, keyed by the same line/station pair and then by each arrival's
 TfL `direction` value (e.g. `northbound`, `southbound`, `clockwise`). Arrivals in each direction remain
 sorted by time to arrival; arrivals without a `direction` are grouped under `Unknown direction`.
-The dashboard shows each direction as a heading (e.g. "Northbound").
+The dashboard shows each direction under a line-and-direction heading (e.g. "Jubilee - Inbound").
 
 ```yaml
 tfl:
