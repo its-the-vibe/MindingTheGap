@@ -146,7 +146,8 @@ h1{font-size:1.4rem}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:.75rem}
 .card{background:#fff;border-radius:6px;padding:.75rem;box-shadow:0 1px 3px #0003}
 .good{border-left:6px solid #0a0}.minor{border-left:6px solid #f0ad00}.bad{border-left:6px solid #d00}
-button.line-status{font:inherit;color:inherit;text-align:left;background:none;border:0;padding:0;cursor:pointer}
+.line-status{display:block;width:100%;font:inherit;color:inherit;text-align:left;background:none;border:0;padding:0;cursor:pointer}
+.line-reason{white-space:pre-line}
 h3{text-transform:capitalize}
 table{width:100%;border-collapse:collapse}td{padding:.2rem .4rem;border-bottom:1px solid #eee}
 </style></head><body>
@@ -165,12 +166,13 @@ async function load(){
       const s=statuses.map(x=>x.statusSeverityDescription).join(', ');
       const c=el('div','card '+(statuses.some(x=>x.statusSeverityDescription==='Minor Delays')?'minor':s==='Good Service'?'good':'bad'));
       const reasons=statuses.map(x=>x.reason).filter(Boolean).join('\n');
-      const status=el(reasons?'button':'div','line-status',s);
+      const status=el(reasons?'button':'div','line-status',reasons?undefined:s);
       if(reasons){
         status.type='button';status.setAttribute('aria-expanded','false');
-        const reason=el('div',null,reasons);reason.hidden=true;
+        status.append(el('strong',null,l.name),document.createTextNode(s));
+        const reason=el('div','line-reason',reasons);reason.hidden=true;
         status.addEventListener('click',()=>{reason.hidden=!reason.hidden;status.setAttribute('aria-expanded',String(!reason.hidden))});
-        c.append(el('strong',null,l.name),status,reason);
+        c.append(status,reason);
       }else c.append(el('strong',null,l.name),status);
       L.append(c)});
     const A=document.getElementById('arrivals');A.replaceChildren();
