@@ -43,7 +43,18 @@ func (s *Server) Handler() http.Handler {
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /{$}", s.index)
 	mux.HandleFunc("GET /api/v1/status", s.status)
+	mux.HandleFunc("GET /api/v1/lineStatus", s.lineStatus)
 	return mux
+}
+
+func (s *Server) lineStatus(w http.ResponseWriter, r *http.Request) {
+	lines, err := s.src.LineStatuses(r.Context(), s.cfg.TFL.MonitoredLines)
+	w.Header().Set("Content-Type", "application/json")
+	if err != nil {
+		log.Printf("line status: %v", err)
+		w.WriteHeader(http.StatusBadGateway)
+	}
+	json.NewEncoder(w).Encode(orderLineStatuses(lines, s.cfg.TFL.MonitoredLines))
 }
 
 func (s *Server) status(w http.ResponseWriter, r *http.Request) {
