@@ -15,9 +15,13 @@ import (
 type fake struct {
 	arrivalCalls []string
 	arrivals     []tfl.Arrival
+	lineStatuses []tfl.LineStatus
 }
 
-func (*fake) LineStatuses(context.Context, []string) ([]tfl.LineStatus, error) {
+func (f *fake) LineStatuses(context.Context, []string) ([]tfl.LineStatus, error) {
+	if f.lineStatuses != nil {
+		return append([]tfl.LineStatus(nil), f.lineStatuses...), nil
+	}
 	return []tfl.LineStatus{{ID: "victoria", Name: "Victoria"}}, nil
 }
 func (f *fake) Arrivals(_ context.Context, line, stationID string) ([]tfl.Arrival, error) {
@@ -83,9 +87,31 @@ func TestStatusQueriesEachMonitoredLineAndStation(t *testing.T) {
 		got.Arrivals["victoria/940GZZLUOXC"][0].LineName != "victoria" {
 		t.Fatalf("arrivals: %+v", got.Arrivals)
 	}
+	if strings.Join(got.StationOrder, ",") != "northern/940GZZLUOXC,victoria/940GZZLUOXC" {
+		t.Fatalf("station order: %v", got.StationOrder)
+	}
 	if len(got.ArrivalsByDirection["northern/940GZZLUOXC"]) != 1 ||
 		len(got.ArrivalsByDirection["northern/940GZZLUOXC"]["Unknown direction"]) != 1 {
 		t.Fatalf("single-direction arrivals: %+v", got.ArrivalsByDirection["northern/940GZZLUOXC"])
+	}
+}
+
+func TestStatusOrdersLinesByConfiguration(t *testing.T) {
+	cfg := &config.Config{}
+	cfg.TFL.MonitoredLines = []string{"northern", "victoria"}
+	src := &fake{lineStatuses: []tfl.LineStatus{
+		{ID: "victoria", Name: "Victoria"},
+		{ID: "northern", Name: "Northern"},
+	}}
+	rec := httptest.NewRecorder()
+	New(cfg, src).Handler().ServeHTTP(rec, httptest.NewRequest("GET", "/api/v1/status", nil))
+
+	var got StatusResponse
+	if err := json.Unmarshal(rec.Body.Bytes(), &got); err != nil {
+		t.Fatal(err)
+	}
+	if len(got.Lines) != 2 || got.Lines[0].ID != "northern" || got.Lines[1].ID != "victoria" {
+		t.Fatalf("line order: %+v", got.Lines)
 	}
 }
 
@@ -134,6 +160,7 @@ func TestIndexRendersDirectionGroups(t *testing.T) {
 	New(cfg, &fake{}).Handler().ServeHTTP(rec, httptest.NewRequest("GET", "/", nil))
 
 	if !strings.Contains(rec.Body.String(), "d.arrivalsByDirection") ||
+		!strings.Contains(rec.Body.String(), "(d.stationOrder||Object.keys(d.arrivals||{})).forEach(id=>") ||
 		!strings.Contains(rec.Body.String(), "el('h3',null,direction)") ||
 		!strings.Contains(rec.Body.String(), "a.towards||''") ||
 		strings.Contains(rec.Body.String(), "a.destinationName") {
