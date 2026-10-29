@@ -169,7 +169,7 @@ async function load(){
       const status=el(reasons?'button':'div','line-status',reasons?undefined:s);
       if(reasons){
         status.type='button';status.setAttribute('aria-expanded','false');
-        status.append(el('strong',null,l.name),document.createTextNode(s));
+        status.append(el('strong',null,l.name),document.createElement('br'),document.createTextNode(s));
         const reason=el('div','line-reason',reasons);reason.hidden=true;
         status.addEventListener('click',()=>{reason.hidden=!reason.hidden;status.setAttribute('aria-expanded',String(!reason.hidden))});
         c.append(status,reason);

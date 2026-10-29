@@ -179,7 +179,7 @@ func TestIndexRendersMinorDelayColorAndReasonToggle(t *testing.T) {
 		".line-status{display:block;width:100%",
 		".line-reason{white-space:pre-line}",
 		"statuses.map(x=>x.reason).filter(Boolean)",
-		"status.append(el('strong',null,l.name),document.createTextNode(s))",
+		"status.append(el('strong',null,l.name),document.createElement('br'),document.createTextNode(s))",
 		"el('div','line-reason',reasons)",
 		"status.addEventListener('click'",
 		"reason.hidden=!reason.hidden",
