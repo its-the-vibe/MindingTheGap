@@ -54,6 +54,8 @@ func (c *Client) get(ctx context.Context, path string, out any) error {
 	if err != nil {
 		return err
 	}
+	req.Header.Set("User-Agent", "curl/8.4.0")
+
 	resp, err := c.http.Do(req)
 	if err != nil {
 		return err
