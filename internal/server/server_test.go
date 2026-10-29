@@ -134,7 +134,8 @@ func TestIndexRendersDirectionGroups(t *testing.T) {
 	New(cfg, &fake{}).Handler().ServeHTTP(rec, httptest.NewRequest("GET", "/", nil))
 
 	if !strings.Contains(rec.Body.String(), "d.arrivalsByDirection") ||
-		!strings.Contains(rec.Body.String(), "el('h3',null,direction)") {
+		!strings.Contains(rec.Body.String(), "el('h3',null,direction)") ||
+		!strings.Contains(rec.Body.String(), "a.destinationName||a.towards") {
 		t.Fatalf("index does not render direction groups: %s", rec.Body)
 	}
 }

@@ -151,6 +151,7 @@ async function load(){
         c.append(el('h3',null,direction));const t=el('table');
         group.slice(0,10).forEach(a=>{const r=t.insertRow();
           r.insertCell().textContent=a.lineName;
+          r.insertCell().textContent=a.destinationName||a.towards||'';
           r.insertCell().textContent=Math.round(a.timeToStation/60)+' min'});
         c.append(t)});
       A.append(c)});
