@@ -149,7 +149,7 @@ h1{font-size:1.4rem}
 .line-status{display:block;width:100%;font:inherit;color:inherit;text-align:left;background:none;border:0;padding:0;cursor:pointer}
 .line-reason{white-space:pre-line}
 h3{text-transform:capitalize}
-table{width:100%;border-collapse:collapse}td{padding:.2rem .4rem;border-bottom:1px solid #eee}
+table{width:100%;table-layout:fixed;border-collapse:collapse}td{padding:.2rem .4rem;border-bottom:1px solid #eee}td:last-child{width:5em;text-align:right}
 </style></head><body>
 <h1>London Tube Dashboard</h1>
 <h2>Line status</h2><div id="lines" class="grid"></div>
