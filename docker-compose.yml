@@ -1,0 +1,17 @@
+services:
+  app:
+    build: .
+    ports:
+      - "${PORT:-8080}:8080"
+    volumes:
+      - ./config.yaml:/config.yaml:ro
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    environment:
+      - TFL_APP_KEY=${TFL_APP_KEY}
+    restart: on-failure:10
