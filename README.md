@@ -26,6 +26,10 @@ in the config file to change how often the dashboard refreshes (default: 30 seco
 Configure each monitored station as `<line>/<stationId>` under `tfl.monitored_stations`.
 Each entry triggers a separate TfL request to `/line/{line}/arrivals/{stationId}`.
 List a station more than once to monitor it on multiple lines; each result is keyed by its line/station pair.
+The `/api/v1/status` response keeps `arrivals` as a time-sorted array for compatibility and also
+provides `arrivalsByDirection`, keyed by the same line/station pair and then by each arrival's
+`towards` value (or `destinationName` when `towards` is empty). Arrivals in each direction remain
+sorted by time to arrival; arrivals without either direction field are grouped under `Unknown direction`.
 
 ```yaml
 tfl:
