@@ -32,9 +32,10 @@ func New(cfg *config.Config, src Source) *Server {
 }
 
 type StatusResponse struct {
-	Lines    []tfl.LineStatus         `json:"lines"`
-	Arrivals map[string][]tfl.Arrival `json:"arrivals"`
-	Errors   []string                 `json:"errors,omitempty"`
+	Lines               []tfl.LineStatus                    `json:"lines"`
+	Arrivals            map[string][]tfl.Arrival            `json:"arrivals"`
+	ArrivalsByDirection map[string]map[string][]tfl.Arrival `json:"arrivalsByDirection"`
+	Errors              []string                            `json:"errors,omitempty"`
 }
 
 func (s *Server) Handler() http.Handler {
@@ -45,7 +46,10 @@ func (s *Server) Handler() http.Handler {
 }
 
 func (s *Server) status(w http.ResponseWriter, r *http.Request) {
-	resp := StatusResponse{Arrivals: map[string][]tfl.Arrival{}}
+	resp := StatusResponse{
+		Arrivals:            map[string][]tfl.Arrival{},
+		ArrivalsByDirection: map[string]map[string][]tfl.Arrival{},
+	}
 	ctx := r.Context()
 	lines, err := s.src.LineStatuses(ctx, s.cfg.TFL.MonitoredLines)
 	if err != nil {
@@ -67,6 +71,18 @@ func (s *Server) status(w http.ResponseWriter, r *http.Request) {
 		}
 		sort.Slice(arr, func(i, j int) bool { return arr[i].TimeToStation < arr[j].TimeToStation })
 		resp.Arrivals[entry] = arr
+		directions := map[string][]tfl.Arrival{}
+		for _, arrival := range arr {
+			direction := strings.TrimSpace(arrival.TowardsText)
+			if direction == "" {
+				direction = strings.TrimSpace(arrival.DestinationName)
+			}
+			if direction == "" {
+				direction = "Unknown direction"
+			}
+			directions[direction] = append(directions[direction], arrival)
+		}
+		resp.ArrivalsByDirection[entry] = directions
 	}
 	w.Header().Set("Content-Type", "application/json")
 	if len(resp.Errors) > 0 && len(resp.Lines) == 0 && len(resp.Arrivals) == 0 {
@@ -131,13 +147,15 @@ async function load(){
       c.append(el('strong',null,l.name),el('div',null,s));L.append(c)});
     const A=document.getElementById('arrivals');A.replaceChildren();
     Object.entries(d.arrivals||{}).forEach(([id,arr])=>{
-      const c=el('div','card');const t=el('table');
+      const c=el('div','card');
       c.append(el('strong',null,(arr[0]&&arr[0].stationName)||id));
-      arr.slice(0,10).forEach(a=>{const r=t.insertRow();
-        r.insertCell().textContent=a.lineName;
-        r.insertCell().textContent=a.towards||a.destinationName;
-        r.insertCell().textContent=Math.round(a.timeToStation/60)+' min'});
-      c.append(t);A.append(c)});
+      Object.entries((d.arrivalsByDirection||{})[id]||{}).forEach(([direction,group])=>{
+        c.append(el('h3',null,direction));const t=el('table');
+        group.slice(0,10).forEach(a=>{const r=t.insertRow();
+          r.insertCell().textContent=a.lineName;
+          r.insertCell().textContent=Math.round(a.timeToStation/60)+' min'});
+        c.append(t)});
+      A.append(c)});
     document.getElementById('err').textContent=(d.errors||[]).join('; ');
   }catch(e){document.getElementById('err').textContent='Failed to load data'}
 }

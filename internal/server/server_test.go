@@ -14,6 +14,7 @@ import (
 
 type fake struct {
 	arrivalCalls []string
+	arrivals     []tfl.Arrival
 }
 
 func (*fake) LineStatuses(context.Context, []string) ([]tfl.LineStatus, error) {
@@ -21,6 +22,9 @@ func (*fake) LineStatuses(context.Context, []string) ([]tfl.LineStatus, error) {
 }
 func (f *fake) Arrivals(_ context.Context, line, stationID string) ([]tfl.Arrival, error) {
 	f.arrivalCalls = append(f.arrivalCalls, line+"/"+stationID)
+	if f.arrivals != nil {
+		return append([]tfl.Arrival(nil), f.arrivals...), nil
+	}
 	return []tfl.Arrival{{LineName: line, TimeToStation: 60}}, nil
 }
 
@@ -78,5 +82,58 @@ func TestStatusQueriesEachMonitoredLineAndStation(t *testing.T) {
 	if len(got.Arrivals) != 2 || got.Arrivals["northern/940GZZLUOXC"][0].LineName != "northern" ||
 		got.Arrivals["victoria/940GZZLUOXC"][0].LineName != "victoria" {
 		t.Fatalf("arrivals: %+v", got.Arrivals)
+	}
+}
+
+func TestStatusGroupsArrivalsByDirectionAndKeepsFlatArrivals(t *testing.T) {
+	cfg := &config.Config{}
+	cfg.TFL.MonitoredStations = []string{"northern/940GZZLUOXC"}
+	src := &fake{arrivals: []tfl.Arrival{
+		{LineName: "northern", TowardsText: "Morden", TimeToStation: 420},
+		{LineName: "northern", TowardsText: "Battersea Power", TimeToStation: 180},
+		{LineName: "northern", DestinationName: "Vauxhall", TimeToStation: 60},
+		{LineName: "northern", TowardsText: " ", DestinationName: "Morden", TimeToStation: 120},
+		{LineName: "northern", TimeToStation: 30},
+	}}
+	rec := httptest.NewRecorder()
+	New(cfg, src).Handler().ServeHTTP(rec, httptest.NewRequest("GET", "/api/v1/status", nil))
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("status: %d %s", rec.Code, rec.Body)
+	}
+	var got StatusResponse
+	if err := json.Unmarshal(rec.Body.Bytes(), &got); err != nil {
+		t.Fatal(err)
+	}
+	station := "northern/940GZZLUOXC"
+	if got.Arrivals[station][0].TimeToStation != 30 || len(got.Arrivals[station]) != 5 {
+		t.Fatalf("flat arrivals: %+v", got.Arrivals[station])
+	}
+	groups := got.ArrivalsByDirection[station]
+	if len(groups) != 4 {
+		t.Fatalf("direction groups: %+v", groups)
+	}
+	if got := groups["Morden"]; len(got) != 2 || got[0].TimeToStation != 120 || got[1].TimeToStation != 420 {
+		t.Fatalf("Morden arrivals: %+v", got)
+	}
+	if got := groups["Battersea Power"]; len(got) != 1 || got[0].TimeToStation != 180 {
+		t.Fatalf("Battersea Power arrivals: %+v", got)
+	}
+	if got := groups["Vauxhall"]; len(got) != 1 || got[0].TimeToStation != 60 {
+		t.Fatalf("Vauxhall arrivals: %+v", got)
+	}
+	if got := groups["Unknown direction"]; len(got) != 1 || got[0].TimeToStation != 30 {
+		t.Fatalf("unknown direction arrivals: %+v", got)
+	}
+}
+
+func TestIndexRendersDirectionGroups(t *testing.T) {
+	cfg := &config.Config{}
+	rec := httptest.NewRecorder()
+	New(cfg, &fake{}).Handler().ServeHTTP(rec, httptest.NewRequest("GET", "/", nil))
+
+	if !strings.Contains(rec.Body.String(), "d.arrivalsByDirection") ||
+		!strings.Contains(rec.Body.String(), "el('h3',null,direction)") {
+		t.Fatalf("index does not render direction groups: %s", rec.Body)
 	}
 }
