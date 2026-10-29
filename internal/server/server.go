@@ -125,7 +125,8 @@ body{font-family:system-ui,sans-serif;margin:0;padding:1rem;background:#f4f4f4;c
 h1{font-size:1.4rem}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:.75rem}
 .card{background:#fff;border-radius:6px;padding:.75rem;box-shadow:0 1px 3px #0003}
-.good{border-left:6px solid #0a0}.bad{border-left:6px solid #d00}
+.good{border-left:6px solid #0a0}.minor{border-left:6px solid #f0ad00}.bad{border-left:6px solid #d00}
+button.line-status{font:inherit;color:inherit;text-align:left;background:none;border:0;padding:0;cursor:pointer}
 h3{text-transform:capitalize}
 table{width:100%;border-collapse:collapse}td{padding:.2rem .4rem;border-bottom:1px solid #eee}
 </style></head><body>
@@ -140,9 +141,18 @@ async function load(){
     const d=await (await fetch('/api/v1/status')).json();
     const L=document.getElementById('lines');L.replaceChildren();
     (d.lines||[]).forEach(l=>{
-      const s=(l.lineStatuses||[]).map(x=>x.statusSeverityDescription).join(', ');
-      const c=el('div','card '+(s==='Good Service'?'good':'bad'));
-      c.append(el('strong',null,l.name),el('div',null,s));L.append(c)});
+      const statuses=l.lineStatuses||[];
+      const s=statuses.map(x=>x.statusSeverityDescription).join(', ');
+      const c=el('div','card '+(statuses.some(x=>x.statusSeverityDescription==='Minor Delays')?'minor':s==='Good Service'?'good':'bad'));
+      const reasons=statuses.map(x=>x.reason).filter(Boolean).join('\n');
+      const status=el(reasons?'button':'div','line-status',s);
+      if(reasons){
+        status.type='button';status.setAttribute('aria-expanded','false');
+        const reason=el('div',null,reasons);reason.hidden=true;
+        status.addEventListener('click',()=>{reason.hidden=!reason.hidden;status.setAttribute('aria-expanded',String(!reason.hidden))});
+        c.append(el('strong',null,l.name),status,reason);
+      }else c.append(el('strong',null,l.name),status);
+      L.append(c)});
     const A=document.getElementById('arrivals');A.replaceChildren();
     Object.entries(d.arrivals||{}).forEach(([id,arr])=>{
       const c=el('div','card');

@@ -140,3 +140,21 @@ func TestIndexRendersDirectionGroups(t *testing.T) {
 		t.Fatalf("index does not render direction groups: %s", rec.Body)
 	}
 }
+
+func TestIndexRendersMinorDelayColorAndReasonToggle(t *testing.T) {
+	cfg := &config.Config{}
+	rec := httptest.NewRecorder()
+	New(cfg, &fake{}).Handler().ServeHTTP(rec, httptest.NewRequest("GET", "/", nil))
+
+	for _, want := range []string{
+		".minor{border-left:6px solid #f0ad00}",
+		"x.statusSeverityDescription==='Minor Delays'",
+		"statuses.map(x=>x.reason).filter(Boolean)",
+		"status.addEventListener('click'",
+		"reason.hidden=!reason.hidden",
+	} {
+		if !strings.Contains(rec.Body.String(), want) {
+			t.Errorf("index does not contain %q", want)
+		}
+	}
+}
