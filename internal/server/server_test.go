@@ -135,7 +135,8 @@ func TestIndexRendersDirectionGroups(t *testing.T) {
 
 	if !strings.Contains(rec.Body.String(), "d.arrivalsByDirection") ||
 		!strings.Contains(rec.Body.String(), "el('h3',null,direction)") ||
-		!strings.Contains(rec.Body.String(), "a.destinationName||a.towards") {
+		!strings.Contains(rec.Body.String(), "a.towards||''") ||
+		strings.Contains(rec.Body.String(), "a.destinationName") {
 		t.Fatalf("index does not render direction groups: %s", rec.Body)
 	}
 }
